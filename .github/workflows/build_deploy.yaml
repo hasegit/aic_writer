@@ -51,14 +51,14 @@ jobs:
       continue-on-error: true
       run: >
         aws lambda get-function
-        --function-name area_information_city
+        --function-name aic_writer
 
     - name: create function
       id: create-function
       if: steps.check-function.outcome == 'failure'
       run: >
         aws lambda create-function
-        --function-name area_information_city
+        --function-name aic_writer
         --zip-file fileb://artifact.zip
         --handler lambda_function.lambda_handler
         --runtime python3.9
@@ -69,5 +69,5 @@ jobs:
       if: steps.create-function.conclusion == 'skipped'
       run: >
         aws lambda update-function-code
-        --function-name area_information_city
+        --function-name aic_writer
         --zip-file fileb://artifact.zip
