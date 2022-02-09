@@ -63,7 +63,7 @@ jobs:
         --handler lambda_function.lambda_handler
         --runtime python3.9
         --role ${{ secrets.AWS_ARN_ROLE }}
-        --timeout 10
+        --timeout 120
 
     - name: update function
       if: steps.create-function.conclusion == 'skipped'
