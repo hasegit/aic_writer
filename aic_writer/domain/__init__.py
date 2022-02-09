@@ -1,0 +1,1 @@
+from .area_information_city import AreaInformationCity, AreaInformationCityList

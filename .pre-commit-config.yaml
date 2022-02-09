@@ -1,0 +1,24 @@
+repos:
+- repo: local
+  hooks:
+
+  - id: isort
+    name: isort
+    entry: bash -c 'poetry run isort . --diff;poetry run isort .'
+    language: system
+    verbose: true
+    pass_filenames: false
+
+  - id: black
+    name: black
+    entry: bash -c 'poetry run black . --diff;poetry run black .'
+    language: system
+    verbose: true
+    pass_filenames: false
+
+  - id: mypy
+    name: mypy
+    entry: bash -c 'poetry run mypy'
+    language: system
+    verbose: true
+    pass_filenames: false

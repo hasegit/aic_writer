@@ -1,0 +1,73 @@
+name: Build Deploy
+on:
+  push:
+    branches:
+    - main
+
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: update python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+        architecture: 'x64'
+
+    - name: aws credential
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: install poetry
+      run: >
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+        | python -
+
+    - name: set env
+      run: echo "PATH=${PATH}:$HOME/.poetry/bin" >> $GITHUB_ENV
+
+    - name: checkout branch
+      uses: actions/checkout@v2
+
+    - name: build package
+      run: poetry build
+
+    - name: install package to local
+      run: pip install --upgrade -t package dist/*.whl
+
+    - name: copy lambda_function
+      run: cp lambda_function.py package/.
+
+    - name: zip local package for lambda
+      run: (cd package ; zip -r ../artifact.zip . -x '*.pyc')
+
+    - name: check function
+      id: check-function
+      continue-on-error: true
+      run: >
+        aws lambda get-function
+        --function-name area_information_city
+
+    - name: create function
+      id: create-function
+      if: steps.check-function.outcome == 'failure'
+      run: >
+        aws lambda create-function
+        --function-name area_information_city
+        --zip-file fileb://artifact.zip
+        --handler lambda_function.lambda_handler
+        --runtime python3.9
+        --role ${{ secrets.AWS_ARN_ROLE }}
+        --timeout 10
+
+    - name: update function
+      if: steps.create-function.conclusion == 'skipped'
+      run: >
+        aws lambda update-function-code
+        --function-name area_information_city
+        --zip-file fileb://artifact.zip

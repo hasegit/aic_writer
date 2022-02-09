@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = hogegege
+omit = 
+    *test_*.py
+    *__init__.py
